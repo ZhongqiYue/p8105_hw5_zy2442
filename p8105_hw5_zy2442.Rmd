@@ -150,12 +150,28 @@ tidy_path_df =
 
 #### Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 ```{r}
+# Set a plot dataframe which contains a variable combining the "arm" and "subject_id".
 plot_df = 
   tidy_path_df %>% 
   mutate(arm_id = str_c(arm, subject_id, sep = "_"))
+
+# Make the spaghetti plot.
+plot = 
+  plot_df %>% 
+  ggplot(aes(x = week_number, y = observation, group = arm_id, color = arm)) +
+  geom_line() +
+  labs(
+    title = "Observations on each subject over time",
+    x = "Time",
+    y = "Observation"
+    ) + 
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1))
   
+plot 
 
 ```
+
+* As the spaghetti plot shown, the observations in control group seem to be pretty steady compared to the experiment group whose observations seem to have a increasing pattern over time. Additionally, the overall observation values of the experiment group seem to be higher than that of the control group. 
 
 # Problem 3
 #### Set the initial design elements and write the function to do the t-test.
@@ -231,62 +247,92 @@ power_df %>%
   ggplot(aes(x = mu_value, y = estimate)) +
   geom_point() + 
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) + 
-  theme(axis.text.x = element_text(angle = 0, vjust = 0.5,, hjust = 1))+
   labs(
     title = "The proportion of rejected null hypothesis with varied mu values",
     x = "mu values",
     y = "The power of the test"
-    )
+    ) +
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1))
+  
 ```
 
 * As shown by the plot, it is obvious to see that as the effect size (mu value) increases, the power of test will also increase. 
 
 #### Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis.
 ```{r}
-plot1 = 
+# Write a function to take the average of mu bar for each tru mu value.
+average = function(x) {
+  
   t_tests_results %>% 
-  select(mu_value, mu_hat) %>% 
-  mutate(
-    mu_value = as.factor(mu_value),
-    average_estimate = mean(mu_hat)) %>% 
-      mutate(mu_value = fct_reorder(mu_value, average_estimate)) %>% 
+    filter(mu_value == x) %>% 
+    summarize(
+      mu_value,
+      average_estimate = mean(mu_hat)
+    )
+  
+}
+
+# Bind the result of each true mu value to make a new dataframe.
+average_df = 
+  bind_rows(average(0), average(1), average(2), average(3), average(4), average(5), average(6))
+
+# Make the first plot.
+plot1 = 
+  average_df %>% 
+      mutate(mu_value = as.factor(mu_value)) %>% 
       ggplot(aes(x = mu_value, y = average_estimate)) +
-      geom_point() + 
-      theme(axis.text.x = element_text(angle = 0, vjust = 0.5,, hjust = 1))+
+      geom_point() +
       labs(
         title = "The average estimate of μ with varied mu values",
-        x = "mu values",
+        x = "True mu values",
         y = "The average estimate of μ̂"
-        )
+        ) +
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1))
 
 plot1
+
 ```
 
 #### Make a second plot the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 ```{r}
-plot2 = 
-  t_tests_results %>% 
-  mutate(
+# Write a function to take the average of mu bar only in samples for which the null was rejected for each true mu value.
+average_reject = function (x) {
+  
+  t_tests_results %>%
+    filter(mu_value == x) %>% 
+    mutate(
     conclusion = case_when(
       p.value >= 0.05 ~ "Fail to reject",
       p.value < 0.05 ~ "Reject"
   )) %>% 
   select(mu_value, mu_hat, conclusion) %>% 
   filter(conclusion == "Reject") %>% 
-  mutate(average_estimate = mean(mu_hat),
-         mu_value = as.factor(mu_value)) %>%
-  mutate(mu_value = fct_reorder(mu_value, average_estimate)) %>% 
+  summarize(
+    mu_value,
+    average_estimate = mean(mu_hat)
+  )
+  
+}
+
+# Bind the result of each true mu value to make a new dataframe.
+average_reject_df = 
+   bind_rows(average_reject(0), average_reject(1), average_reject(2), average_reject(3), average_reject(4), average_reject(5), average_reject(6))
+
+# Make the second plot.
+plot2 = 
+  average_reject_df %>% 
+  mutate(mu_value = as.factor(mu_value)) %>% 
       ggplot(aes(x = mu_value, y = average_estimate)) +
-      geom_point() + 
-      theme(axis.text.x = element_text(angle = 0, vjust = 0.5,, hjust = 1))+
+      geom_point() +
       labs(
         title = "The average estimate of μ for rejected results with varied mu values",
-        x = "mu values",
+        x = "True mu values",
         y = "The average estimate of μ̂"
-        )
+        ) +
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1))
 
 plot2
 
 ```
 
-* As shown by the two plots, the sample average of μ̂  across tests for which the null is rejected does not equal to the true value of μ. Instead, the former one is bigger. 
+* As shown by the second plot, the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ as the effect size (true mean values) increases. As shown by the previous test power plot, as the effect size increases, the proportion of times the null was rejected also increases. Therefore, when the effect size increases, the null hypothesis mu = 0 is more likely to be rejected, which means that the estimate mu values will depart more from zero. Thus, as the effect size increases, the estimated mu value for which the null is rejected will be more closer to its true mu value. 
