@@ -24,7 +24,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 Read in the data.
 
-```{r}
+```{r, warning = FALSE}
 homicide_df = 
   read_csv("homicide_data/homicide-data.csv") %>% 
   mutate(
@@ -42,7 +42,7 @@ homicide_df =
 
 Let's look at this a bit
 
-```{r}
+```{r, warning = FALSE}
 aggregate_df = 
   homicide_df %>% 
   group_by(city_state) %>% 
@@ -54,7 +54,7 @@ aggregate_df =
 
 Can I do a prop test for a single city?
 
-```{r}
+```{r, warning = FALSE}
 prop.test(
   aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_unsolved), 
   aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_total)) %>% 
@@ -63,7 +63,7 @@ prop.test(
 
 Try to iterate ........
 
-```{r}
+```{r, warning = FALSE}
 results_df = 
   aggregate_df %>% 
   mutate(
@@ -77,7 +77,7 @@ results_df =
 
 
 
-```{r}
+```{r, warning = FALSE}
 results_df %>% 
   mutate(city_state = fct_reorder(city_state, estimate)) %>% 
   ggplot(aes(x = city_state, y = estimate)) +
@@ -88,7 +88,7 @@ results_df %>%
 
 
 
-```{r, error = TRUE}
+```{r, error = TRUE, warning = FALSE}
 city_prop_test = function(df) {
   
   n_unsovled ...
@@ -115,7 +115,7 @@ homicide_df =
 ## Problem 2
 
 #### import and tidy the dataset 
-```{r}
+```{r, warning = FALSE}
 # Start with a dataframe containing all file names
 path_df = 
   tibble(
@@ -149,7 +149,7 @@ tidy_path_df =
 ```
 
 #### Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
-```{r}
+```{r, warning = FALSE}
 # Set a plot dataframe which contains a variable combining the "arm" and "subject_id".
 plot_df = 
   tidy_path_df %>% 
@@ -175,7 +175,7 @@ plot
 
 # Problem 3
 #### Set the initial design elements and write the function to do the t-test.
-```{r}
+```{r, warning = FALSE}
 sample = function(samp_size = 30, mu, sigma = 5) {
   samp_data = 
     tibble(
@@ -199,7 +199,7 @@ sample = function(samp_size = 30, mu, sigma = 5) {
 ```
 
 #### Perform simulation for μ={0,1,2,3,4,5,6}.
-```{r}
+```{r, warning = FALSE}
 t_tests_results =
   tibble(
   mu_value = c(0,1,2,3,4,5,6)
@@ -239,7 +239,7 @@ power_df =
 ```
 
 #### Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
-```{r}
+```{r, warning = FALSE}
 # Make a plot --- power of the test vs. mu values.
 power_df %>% 
   mutate(mu_value = as.factor(mu_value),
@@ -259,7 +259,7 @@ power_df %>%
 * As shown by the plot, it is obvious to see that as the effect size (mu value) increases, the power of test will also increase. 
 
 #### Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis.
-```{r}
+```{r, warning = FALSE}
 # Write a function to take the average of mu bar for each tru mu value.
 average = function(x) {
   
@@ -294,7 +294,7 @@ plot1
 ```
 
 #### Make a second plot the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
-```{r}
+```{r, warning = FALSE}
 # Write a function to take the average of mu bar only in samples for which the null was rejected for each true mu value.
 average_reject = function (x) {
   
